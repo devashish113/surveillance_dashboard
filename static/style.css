@@ -25,6 +25,24 @@ body {
     height: 100vh;
 }
 
+/* --- Atmospheric Video Background --- */
+#bg-video {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    object-fit: cover; /* Ensures video scales perfectly to screen */
+    z-index: -2;
+    opacity: 0.8; 
+}
+
+.video-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.75); /* Darkens the video drastically to make glass panels pop */
+    z-index: -1;
+}
+
 
 
 /* --- Glassmorphism Core Utilities --- */
