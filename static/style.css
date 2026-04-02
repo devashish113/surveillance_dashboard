@@ -347,9 +347,16 @@ h1 {
 
 /* --- Mobile Responsiveness --- */
 @media (max-width: 768px) {
+    body {
+        overflow-y: auto;
+        height: auto;
+    }
+    
     .dashboard-container {
         padding: 5px;
         gap: 10px;
+        height: auto;
+        min-height: 100vh;
     }
     
     .main-header {
