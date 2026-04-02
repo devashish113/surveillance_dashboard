@@ -4,12 +4,14 @@ import boto3
 from flask import Flask, render_template, jsonify
 from flask_cors import CORS
 
+from botocore.config import Config
+
 app = Flask(__name__)
 # Enable CORS just in case for local testing
 CORS(app)
 
-# Initialize AWS S3 Client
-s3 = boto3.client('s3')
+# Initialize AWS S3 Client with EXPLICIT Mumbai Region to fix Presigned URL Signature errors
+s3 = boto3.client('s3', region_name='ap-south-1', config=Config(signature_version='s3v4'))
 BUCKET = "surveillance-frames"
 
 @app.route('/')
