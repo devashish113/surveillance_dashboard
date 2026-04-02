@@ -344,3 +344,42 @@ h1 {
 
 .text-danger { color: #fca5a5; }
 .text-success { color: #a7f3d0; }
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 5px;
+        gap: 10px;
+    }
+    
+    .main-header {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+    }
+    
+    .system-status {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .grid-layout {
+        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .alert-feed-panel {
+        max-height: 350px;
+        flex-shrink: 0;
+    }
+    
+    .analysis-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .snapshot-wrapper {
+        min-height: 200px;
+    }
+}
