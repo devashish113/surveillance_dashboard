@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aegis | AI Security Command Center</title>
+    <!-- Use Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="background-effects">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Header / Nav -->
+        <header class="glass-panel main-header">
+            <div class="brand">
+                <i class="fa-solid fa-shield-halved glowing-icon"></i>
+                <h1><span class="highlight">Aegis</span> Security Core</h1>
+            </div>
+            
+            <div class="system-status">
+                <div class="status-indicator">
+                    <span class="dot pulse-green"></span>
+                    <span class="label">Motion Server</span>
+                </div>
+                <div class="status-indicator">
+                    <span class="dot pulse-green"></span>
+                    <span class="label">Face Engine</span>
+                </div>
+                <div class="status-indicator">
+                    <span class="dot pulse-green"></span>
+                    <span class="label">YOLO Vision</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Grid -->
+        <main class="grid-layout">
+            <!-- Alert Feed Sidebar -->
+            <aside class="glass-panel alert-feed-panel">
+                <div class="panel-header">
+                    <h2><i class="fa-solid fa-satellite-dish blink"></i> Live Threat Feed</h2>
+                    <span class="badge" id="alert-count">0</span>
+                </div>
+                <div class="feed-container" id="alert-feed">
+                    <div class="loading-state">
+                        <i class="fa-solid fa-circle-notch fa-spin"></i> Synchronizing with AWS...
+                    </div>
+                    <!-- JavaScript will inject Alert Cards here -->
+                </div>
+            </aside>
+
+            <!-- Focus View (Inspector) -->
+            <section class="glass-panel inspector-panel">
+                <div class="panel-header" style="justify-content: space-between;">
+                    <h2><i class="fa-solid fa-expand"></i> Focal Analysis</h2>
+                    <span id="selected-timestamp" style="color: var(--text-muted); font-size: 0.9rem;"></span>
+                </div>
+                
+                <div class="inspector-content" id="inspector-view">
+                    <!-- Default Empty State -->
+                    <div class="empty-state">
+                        <i class="fa-solid fa-crosshairs"></i>
+                        <p>Select a threat from the feed to view tactical breakdown.</p>
+                    </div>
+
+                    <!-- Active View State (Hidden by default) -->
+                    <div class="focal-details" id="focal-details" style="display: none;">
+                        <div class="snapshot-wrapper">
+                            <img id="focal-image" src="" alt="Threat Snapshot" />
+                            <div class="threat-overlay" id="focal-reason">Unknown Intruder</div>
+                        </div>
+
+                        <div class="analysis-grid">
+                            <!-- Face Recognition Data -->
+                            <div class="analysis-card">
+                                <h3><i class="fa-solid fa-user-scan"></i> Face Recognition</h3>
+                                <ul id="face-list" class="data-list"></ul>
+                            </div>
+                            
+                            <!-- YOLO Model Data -->
+                            <div class="analysis-card">
+                                <h3><i class="fa-solid fa-box"></i> Object Detection</h3>
+                                <ul id="yolo-list" class="data-list"></ul>
+                            </div>
+
+                            <!-- Motion Data -->
+                            <div class="analysis-card">
+                                <h3><i class="fa-solid fa-person-running"></i> Motion Sensors</h3>
+                                <div id="motion-data" class="data-text"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <script src="/static/app.js"></script>
+</body>
+</html>
