@@ -32,14 +32,14 @@ body {
     width: 100vw; height: 100vh;
     object-fit: cover; /* Ensures video scales perfectly to screen */
     z-index: -2;
-    opacity: 0.8; 
+    opacity: 1.0; 
 }
 
 .video-overlay {
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100vh;
-    background: rgba(0, 0, 0, 0.75); /* Darkens the video drastically to make glass panels pop */
+    background: rgba(0, 0, 0, 0.3); /* Much lighter overlay */
     z-index: -1;
 }
 
@@ -48,11 +48,11 @@ body {
 /* --- Glassmorphism Core Utilities --- */
 .glass-panel {
     background: var(--bg-glass);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     border: 1px solid var(--border-glass);
     border-radius: 16px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.5);
 }
 
 .dashboard-container {
