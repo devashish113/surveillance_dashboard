@@ -24,6 +24,9 @@
             </div>
             
             <div class="system-status" style="display: flex; align-items: center; gap: 20px;">
+                <button id="upload-face-btn" class="sound-btn" style="background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.3); margin-right: 15px; outline: none; border-radius: 20px; padding: 6px 15px; color: white;">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> UPLOAD FACE
+                </button>
                 <button id="sound-toggle" class="sound-btn">
                     <i class="fa-solid fa-volume-xmark"></i> SOUND: OFF
                 </button>
@@ -108,6 +111,30 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- Face Upload Modal -->
+    <div id="upload-modal" class="modal">
+        <div class="modal-content glass-panel">
+            <span class="close-btn" id="close-modal">&times;</span>
+            <h2 style="margin-bottom: 5px;"><i class="fa-solid fa-user-plus"></i> Inject Target Face</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Upload a recognizable face. The AWS pipeline will automatically hot-reload the Face Engine without dropping tracking.</p>
+            
+            <form id="upload-form">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; color: var(--accent-blue); font-weight: 600;">Target Name</label>
+                    <input type="text" id="target-name" required placeholder="Enter name (e.g., Aman)" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); color: white; outline: none;">
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; color: var(--accent-blue); font-weight: 600;">Target Photo</label>
+                    <input type="file" id="target-image" accept="image/*" required style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); color: white; outline: none;">
+                </div>
+                <button type="submit" class="submit-btn" id="submit-upload-btn" style="width: 100%; padding: 12px; border-radius: 8px; background: linear-gradient(135deg, rgba(34,197,94,0.4), rgba(14,165,233,0.4)); border: 1px solid rgba(255,255,255,0.2); color: white; font-weight: bold; cursor: pointer;">
+                    <i class="fa-solid fa-upload"></i> Inject & Deploy
+                </button>
+            </form>
+            <div id="upload-status" style="margin-top: 15px; font-size: 0.9rem; font-weight: 600; text-align: center;"></div>
+        </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <script src="/static/app.js"></script>

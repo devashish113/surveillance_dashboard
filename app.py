@@ -1,6 +1,7 @@
 import os
 import json
 import boto3
+import urllib3
 from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
 from flask_socketio import SocketIO
@@ -19,6 +20,37 @@ BUCKET = "surveillance-frames"
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/api/upload-face', methods=['POST'])
+def upload_face():
+    """
+    Phase 13: Face target uploader.
+    Saves image to known_faces in S3 and instantly pings EC2 Face Server to hot-reload.
+    """
+    if 'face_image' not in request.files or 'person_name' not in request.form:
+        return jsonify({"error": "Missing image or name"}), 400
+    
+    file = request.files['face_image']
+    name = request.form['person_name'].strip().replace(" ", "_")
+    
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+        
+    s3_key = f"known_faces/{name}_front.jpg"
+    try:
+        s3.put_object(Bucket=BUCKET, Key=s3_key, Body=file.read(), ContentType=file.content_type)
+        
+        # Hot-Reload EC2 Face Server
+        EC2_FACE_URL = "http://13.204.185.155:5002/reload"
+        http = urllib3.PoolManager()
+        try:
+            http.request("POST", EC2_FACE_URL, timeout=3.0)
+        except Exception as e:
+            print(f"Warning: S3 uploaded but failed to reload EC2: {e}")
+            
+        return jsonify({"status": "success", "message": f"{name} uploaded and deployed."})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/webhook', methods=['POST'])
 def webhook_listener():

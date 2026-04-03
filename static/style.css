@@ -457,3 +457,21 @@ h1 {
     box-shadow: 0 0 10px var(--accent-red-glow);
     background: rgba(239, 68, 68, 0.1);
 }
+
+/* Phase 13 Modal Upload */
+.modal {
+    display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+    justify-content: center; align-items: center;
+}
+.modal.show { display: flex; }
+.modal-content {
+    background: rgba(20, 20, 20, 0.85); border: 1px solid var(--border-glass);
+    padding: 30px; border-radius: 12px; max-width: 450px; width: 90%;
+    position: relative; animation: slideDown 0.3s ease-out; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+}
+.close-btn {
+    position: absolute; top: 15px; right: 20px; font-size: 24px; color: var(--text-muted); cursor: pointer;
+}
+.close-btn:hover { color: var(--accent-red); }
+@keyframes slideDown { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }

@@ -347,3 +347,50 @@ socket.on('new_alerts_push', (newAlerts) => {
 
 // Initial population
 fetchLiveFeed();
+
+// Phase 13: Face Uploader Modal Logic
+const uploadBtn = document.getElementById('upload-face-btn');
+const modal = document.getElementById('upload-modal');
+const closeBtn = document.getElementById('close-modal');
+const uploadForm = document.getElementById('upload-form');
+const uploadStatus = document.getElementById('upload-status');
+
+uploadBtn?.addEventListener('click', () => { modal.classList.add('show'); uploadStatus.innerHTML = ''; });
+closeBtn?.addEventListener('click', () => { modal.classList.remove('show'); });
+window.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
+
+uploadForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submit-upload-btn');
+    const nameStr = document.getElementById('target-name').value;
+    const file = document.getElementById('target-image').files[0];
+    
+    if (!file || !nameStr) return;
+    
+    const formData = new FormData();
+    formData.append('person_name', nameStr);
+    formData.append('face_image', file);
+    
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Injecting...';
+    btn.style.opacity = '0.7';
+    
+    try {
+        const res = await fetch('/api/upload-face', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+            uploadStatus.innerHTML = `<span style="color:var(--accent-green)">✅ Success! EC2 Face Engine Hot-Reloaded.</span>`;
+            setTimeout(() => { modal.classList.remove('show'); uploadForm.reset(); }, 2500);
+        } else {
+            uploadStatus.innerHTML = `<span style="color:var(--accent-red)">⚠️ Error: ${data.error}</span>`;
+        }
+    } catch (err) {
+        uploadStatus.innerHTML = `<span style="color:var(--accent-red)">⚠️ Network Error</span>`;
+    } finally {
+        btn.innerHTML = '<i class="fa-solid fa-upload"></i> Inject & Deploy';
+        btn.style.opacity = '1';
+    }
+});
