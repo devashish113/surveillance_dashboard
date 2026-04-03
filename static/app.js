@@ -9,6 +9,72 @@ const INSPECTOR_DETAILS = document.getElementById('focal-details');
 let alertsData = [];
 let activeAlertId = null;
 let isFirstLoad = true;
+let latestAlertIdStr = null;
+
+// Audio Context Engine
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+let soundEnabled = false;
+
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new AudioContext();
+    }
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+    soundEnabled = !soundEnabled;
+    const btn = document.getElementById('sound-toggle');
+    if (soundEnabled) {
+        btn.classList.add('active');
+        btn.innerHTML = '<i class="fa-solid fa-volume-high"></i> SOUND: ON';
+        playSoftAlarm(); // Test beep
+    } else {
+        btn.classList.remove('active');
+        btn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i> SOUND: OFF';
+    }
+}
+
+function playSoftAlarm() {
+    if (!soundEnabled || !audioCtx) return;
+    const playBeep = (freq, startTime) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + startTime);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime + startTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + startTime + 0.1);
+        osc.start(audioCtx.currentTime + startTime);
+        osc.stop(audioCtx.currentTime + startTime + 0.1);
+    };
+    playBeep(600, 0);
+    playBeep(800, 0.15);
+}
+
+function playPanicAlarm() {
+    if (!soundEnabled || !audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = 'square';
+    
+    // Siren modulation
+    for (let i = 0; i < 7; i++) {
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime + (i * 0.3));
+        osc.frequency.linearRampToValueAtTime(1400, audioCtx.currentTime + (i * 0.3) + 0.15);
+        osc.frequency.linearRampToValueAtTime(600, audioCtx.currentTime + (i * 0.3) + 0.3);
+    }
+    
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 2.1);
+    
+    osc.start();
+    osc.stop(audioCtx.currentTime + 2.1);
+}
+
 
 // Polling interval (5 seconds)
 const POLL_INTERVAL_MS = 5000;
@@ -27,6 +93,22 @@ async function fetchLiveFeed() {
                 isFirstLoad = false;
             }
             return;
+        }
+
+        // Detect new incoming alerts to trigger sounds
+        if (newAlerts.length > 0) {
+            const newestAlert = newAlerts[0];
+            if (latestAlertIdStr !== newestAlert.id) {
+                if (latestAlertIdStr !== null) { // don't beep on first page load
+                    const reason = (newestAlert.reason || "").toLowerCase();
+                    if (reason.includes("object") || reason.includes("weapon") || reason.includes("knife")) {
+                        playPanicAlarm();
+                    } else {
+                        playSoftAlarm();
+                    }
+                }
+                latestAlertIdStr = newestAlert.id;
+            }
         }
 
         // Just blindly overwrite the array for simplicity
@@ -216,6 +298,7 @@ function drawBoundingBoxes(alert) {
 
 // Start Lifecycle
 console.log("Aegis Dashboard UI Initialized");
+document.getElementById('sound-toggle')?.addEventListener('click', initAudio);
 document.getElementById('alert-filter')?.addEventListener('input', renderFeed);
 fetchLiveFeed();
 setInterval(fetchLiveFeed, POLL_INTERVAL_MS);
