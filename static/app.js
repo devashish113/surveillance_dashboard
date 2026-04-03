@@ -249,9 +249,6 @@ function selectAlert(id) {
     }
 }
 
-    }
-}
-
 function drawBoundingBoxes(alert) {
     const container = document.getElementById('bounding-boxes-container');
     container.innerHTML = '';
