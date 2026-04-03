@@ -76,54 +76,58 @@ function playPanicAlarm() {
 }
 
 
-// Polling interval (5 seconds)
-const POLL_INTERVAL_MS = 5000;
-
+// Polling interval removed, replaced with WebSockets
 async function fetchLiveFeed() {
     try {
         const response = await fetch('/api/alerts');
         if (!response.ok) throw new Error("API Network Error");
-        
         const newAlerts = await response.json();
-        
-        // If empty
-        if (newAlerts.length === 0) {
-            if (isFirstLoad) {
-                FEED_CONTAINER.innerHTML = `<div class="loading-state"><i class="fa-solid fa-check-circle" style="color:var(--accent-green)"></i> Secure. No recent threats logged.</div>`;
-                isFirstLoad = false;
-            }
-            return;
-        }
-
-        // Detect new incoming alerts to trigger sounds
-        if (newAlerts.length > 0) {
-            const newestAlert = newAlerts[0];
-            if (latestAlertIdStr !== newestAlert.id) {
-                if (latestAlertIdStr !== null) { // don't beep on first page load
-                    const reason = (newestAlert.reason || "").toLowerCase();
-                    if (reason.includes("object") || reason.includes("weapon") || reason.includes("knife")) {
-                        playPanicAlarm();
-                    } else {
-                        playSoftAlarm();
-                    }
-                }
-                latestAlertIdStr = newestAlert.id;
-            }
-        }
-
-        // Just blindly overwrite the array for simplicity
-        alertsData = newAlerts;
-        ALERT_COUNT.innerText = alertsData.length.toString();
-
-        renderFeed();
-        isFirstLoad = false;
-
+        processIncomingFeed(newAlerts);
     } catch (err) {
         console.error("Dashboard Feed Sync Error:", err);
         if (isFirstLoad) {
             FEED_CONTAINER.innerHTML = `<div class="loading-state" style="color:var(--accent-red)"><i class="fa-solid fa-triangle-exclamation"></i> AWS Connection Failed</div>`;
         }
     }
+}
+
+function processIncomingFeed(newAlerts) {
+    // If empty
+    if (newAlerts.length === 0) {
+        if (isFirstLoad) {
+            FEED_CONTAINER.innerHTML = `<div class="loading-state"><i class="fa-solid fa-check-circle" style="color:var(--accent-green)"></i> Secure. No recent threats logged.</div>`;
+            isFirstLoad = false;
+        }
+        return;
+    }
+
+    // Detect new incoming alerts to trigger sounds and notifications
+    if (newAlerts.length > 0) {
+        const newestAlert = newAlerts[0];
+        if (latestAlertIdStr !== newestAlert.id) {
+            if (latestAlertIdStr !== null) { // don't beep on first page load
+                const reason = (newestAlert.reason || "").toLowerCase();
+                if (reason.includes("object") || reason.includes("weapon") || reason.includes("knife")) {
+                    playPanicAlarm();
+                } else {
+                    playSoftAlarm();
+                }
+                
+                // Phase 12: OS Push Notification
+                if ("Notification" in window && Notification.permission === "granted") {
+                    new Notification("🚨 AEGIS THREAT DETECTED", {
+                        body: newestAlert.reason || "Unknown Security Breach",
+                    });
+                }
+            }
+            latestAlertIdStr = newestAlert.id;
+        }
+    }
+
+    alertsData = newAlerts;
+    ALERT_COUNT.innerText = alertsData.length.toString();
+    renderFeed();
+    isFirstLoad = false;
 }
 
 function renderFeed() {
@@ -285,7 +289,38 @@ function drawBoundingBoxes(alert) {
             
             const label = document.createElement('div');
             label.className = 'bounding-box-label';
-            label.innerText = obj.track_id ? `${obj.class} #${obj.track_id}` : obj.class;
+            // Phase 12: Integrated Identity Tracker
+            let identityStr = obj.identity ? ` [${obj.identity.toUpperCase()}]` : '';
+            label.innerText = obj.track_id ? `${obj.class.toUpperCase()} #${obj.track_id}${identityStr}` : obj.class.toUpperCase();
+            
+            div.appendChild(label);
+            container.appendChild(div);
+        });
+    }
+
+    // Phase 12: Face Selection Bounding Boxes
+    if (ai.face && ai.face.faces) {
+        ai.face.faces.forEach(face => {
+            if (!face.location) return;
+            const l = face.location; // top, right, bottom, left
+            const left = offsetX + (l.left / img.naturalWidth) * renderedWidth;
+            const top = offsetY + (l.top / img.naturalHeight) * renderedHeight;
+            const width = ((l.right - l.left) / img.naturalWidth) * renderedWidth;
+            const height = ((l.bottom - l.top) / img.naturalHeight) * renderedHeight;
+            
+            const div = document.createElement('div');
+            div.className = 'bounding-box';
+            div.style.left = left + 'px';
+            div.style.top = top + 'px';
+            div.style.width = Math.max(width, 10) + 'px';
+            div.style.height = Math.max(height, 10) + 'px';
+            div.style.borderColor = '#ff3333';
+            div.style.boxShadow = '0 0 10px rgba(255, 51, 51, 0.5)';
+            
+            const label = document.createElement('div');
+            label.className = 'bounding-box-label';
+            label.style.backgroundColor = '#ff3333';
+            label.innerText = `FACE: ${face.name}`;
             
             div.appendChild(label);
             container.appendChild(div);
@@ -297,5 +332,18 @@ function drawBoundingBoxes(alert) {
 console.log("Aegis Dashboard UI Initialized");
 document.getElementById('sound-toggle')?.addEventListener('click', initAudio);
 document.getElementById('alert-filter')?.addEventListener('input', renderFeed);
+
+// Phase 12: Request OS Notifications
+if ("Notification" in window) {
+    Notification.requestPermission();
+}
+
+// Phase 12: Zero-Latency WebSocket Connection
+const socket = io();
+socket.on('new_alerts_push', (newAlerts) => {
+    console.log("🚀 Incoming low-latency push received!");
+    processIncomingFeed(newAlerts);
+});
+
+// Initial population
 fetchLiveFeed();
-setInterval(fetchLiveFeed, POLL_INTERVAL_MS);

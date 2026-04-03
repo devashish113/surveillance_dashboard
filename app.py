@@ -1,14 +1,16 @@
 import os
 import json
 import boto3
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
+from flask_socketio import SocketIO
 
 from botocore.config import Config
 
 app = Flask(__name__)
 # Enable CORS just in case for local testing
 CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Initialize AWS S3 Client with EXPLICIT Mumbai Region to fix Presigned URL Signature errors
 s3 = boto3.client('s3', region_name='ap-south-1', config=Config(signature_version='s3v4'))
@@ -18,8 +20,27 @@ BUCKET = "surveillance-frames"
 def index():
     return render_template('index.html')
 
+@app.route('/api/webhook', methods=['POST'])
+def webhook_listener():
+    """
+    AWS Lambda hits this instantly when a threat happens.
+    We fetch the latest alerts and push via Socket.IO immediately.
+    """
+    try:
+        data = request.json or {}
+        # We can optimize this by only parsing the new alert, but for simplicity we'll just push the 15 latest
+        alerts = fetch_alerts_from_s3()
+        socketio.emit('new_alerts_push', alerts)
+        return jsonify({"status": "pushed"}), 200
+    except Exception as e:
+        print(f"Webhook error: {e}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/alerts')
-def get_alerts():
+def api_get_alerts():
+    return jsonify(fetch_alerts_from_s3())
+
+def fetch_alerts_from_s3():
     """
     Scans the S3 bucket for the latest JSON threat alerts,
     parses them, and dynamically generates temporary pre-signed 
@@ -62,15 +83,15 @@ def get_alerts():
             data['id'] = obj['Key']
             alerts.append(data)
 
-        return jsonify(alerts)
+        return alerts
 
     except Exception as e:
         print(f"Error fetching alerts: {e}")
-        return jsonify({"error": str(e)}), 500
+        return []
 
 if __name__ == '__main__':
     print("=" * 50)
-    print("🚀 AEGIS COMMAND CENTER — Backend Initializing")
+    print("🚀 AEGIS COMMAND CENTER — WebSocket Backend Initialized")
     print("📍 Available at: http://localhost:5050")
     print("=" * 50)
-    app.run(host='0.0.0.0', port=5050, debug=True)
+    socketio.run(app, host='0.0.0.0', port=5050, allow_unsafe_werkzeug=True)
