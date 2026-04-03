@@ -47,8 +47,20 @@ async function fetchLiveFeed() {
 function renderFeed() {
     // Clear feed
     FEED_CONTAINER.innerHTML = '';
+    const searchInput = document.getElementById('alert-filter');
+    const filterText = searchInput ? searchInput.value.toLowerCase() : '';
 
-    alertsData.forEach((alert) => {
+    const filteredAlerts = alertsData.filter(alert => {
+        const reason = (alert.reason || '').toLowerCase();
+        return reason.includes(filterText);
+    });
+
+    if (filteredAlerts.length === 0 && alertsData.length > 0) {
+        FEED_CONTAINER.innerHTML = '<div class="loading-state">No matching alerts found...</div>';
+        return;
+    }
+
+    filteredAlerts.forEach((alert) => {
         const card = document.createElement('div');
         card.className = `alert-card ${activeAlertId === alert.id ? 'active' : ''}`;
         card.onclick = () => selectAlert(alert.id);
@@ -90,8 +102,13 @@ function selectAlert(id) {
 
     document.getElementById('selected-timestamp').innerText = alert.timestamp;
     
-    // Image fallback
+    // Image fallback and Bounding Box trigger
     const focalImg = document.getElementById('focal-image');
+    document.getElementById('bounding-boxes-container').innerHTML = ''; // clear boxes
+    
+    focalImg.onload = () => {
+        drawBoundingBoxes(alert);
+    };
     focalImg.src = alert.snapshot_url || '';
     focalImg.onerror = () => { focalImg.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" fill="%23222"><rect width="100%" height="100%"/></svg>'; };
 
@@ -150,7 +167,55 @@ function selectAlert(id) {
     }
 }
 
+    }
+}
+
+function drawBoundingBoxes(alert) {
+    const container = document.getElementById('bounding-boxes-container');
+    container.innerHTML = '';
+    const img = document.getElementById('focal-image');
+    
+    if (!img.naturalWidth) return;
+
+    const containerRect = img.parentElement.getBoundingClientRect();
+    const ratio = Math.min(containerRect.width / img.naturalWidth, containerRect.height / img.naturalHeight);
+    
+    const renderedWidth = img.naturalWidth * ratio;
+    const renderedHeight = img.naturalHeight * ratio;
+    
+    const offsetX = (containerRect.width - renderedWidth) / 2;
+    const offsetY = (containerRect.height - renderedHeight) / 2;
+    
+    const ai = alert.ai_results || {};
+    
+    if (ai.yolo && ai.yolo.objects) {
+        ai.yolo.objects.forEach(obj => {
+            if (!obj.bbox) return;
+            const b = obj.bbox; 
+            const left = offsetX + (b.x1 / img.naturalWidth) * renderedWidth;
+            const top = offsetY + (b.y1 / img.naturalHeight) * renderedHeight;
+            const width = ((b.x2 - b.x1) / img.naturalWidth) * renderedWidth;
+            const height = ((b.y2 - b.y1) / img.naturalHeight) * renderedHeight;
+            
+            const div = document.createElement('div');
+            div.className = 'bounding-box';
+            div.style.left = left + 'px';
+            div.style.top = top + 'px';
+            div.style.width = Math.max(width, 10) + 'px';
+            div.style.height = Math.max(height, 10) + 'px';
+            
+            const label = document.createElement('div');
+            label.className = 'bounding-box-label';
+            label.innerText = obj.track_id ? `${obj.class} #${obj.track_id}` : obj.class;
+            
+            div.appendChild(label);
+            container.appendChild(div);
+        });
+    }
+}
+
 // Start Lifecycle
 console.log("Aegis Dashboard UI Initialized");
+document.getElementById('alert-filter')?.addEventListener('input', renderFeed);
 fetchLiveFeed();
 setInterval(fetchLiveFeed, POLL_INTERVAL_MS);
