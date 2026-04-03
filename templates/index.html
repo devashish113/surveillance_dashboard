@@ -47,6 +47,10 @@
                     <h2><i class="fa-solid fa-satellite-dish blink"></i> Live Threat Feed</h2>
                     <span class="badge" id="alert-count">0</span>
                 </div>
+                <!-- Search Filter -->
+                <div class="search-box" style="padding: 10px 15px; border-bottom: 1px solid var(--border-glass);">
+                    <input type="text" id="alert-filter" placeholder="Filter alerts (e.g., Person, Knife)..." style="width: 100%; padding: 8px 12px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); color: white; outline: none;">
+                </div>
                 <div class="feed-container" id="alert-feed">
                     <div class="loading-state">
                         <i class="fa-solid fa-circle-notch fa-spin"></i> Synchronizing with AWS...
@@ -71,8 +75,10 @@
 
                     <!-- Active View State (Hidden by default) -->
                     <div class="focal-details" id="focal-details" style="display: none;">
-                        <div class="snapshot-wrapper">
+                        <div class="snapshot-wrapper" id="snapshot-wrapper">
                             <img id="focal-image" src="" alt="Threat Snapshot" />
+                            <!-- Javascript will draw bounding boxes here -->
+                            <div id="bounding-boxes-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></div>
                             <div class="threat-overlay" id="focal-reason">Unknown Intruder</div>
                         </div>
 
