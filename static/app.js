@@ -10,6 +10,7 @@ let alertsData = [];
 let activeAlertId = null;
 let isFirstLoad = true;
 let latestAlertIdStr = null;
+let userInteracted = false;
 
 // Audio Context Engine
 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -127,6 +128,12 @@ function processIncomingFeed(newAlerts) {
     alertsData = newAlerts;
     ALERT_COUNT.innerText = alertsData.length.toString();
     renderFeed();
+    
+    // Phase 13 UX: Auto-select newest alert if user is in "Live" mode
+    if (!userInteracted && alertsData.length > 0) {
+        selectAlert(alertsData[0].id, false);
+    }
+    
     isFirstLoad = false;
 }
 
@@ -170,7 +177,16 @@ function renderFeed() {
     });
 }
 
-function selectAlert(id) {
+function selectAlert(id, isUserClick = true) {
+    if (isUserClick) {
+        // Resume Live Mode if they click the newest alert, otherwise lock inspection string
+        if (alertsData.length > 0 && id === alertsData[0].id) {
+            userInteracted = false;
+        } else {
+            userInteracted = true;
+        }
+    }
+
     activeAlertId = id;
     
     // Find alert data
