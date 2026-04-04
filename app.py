@@ -2,6 +2,7 @@ import os
 import json
 import boto3
 import urllib3
+import time
 from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
 from flask_socketio import SocketIO
@@ -36,7 +37,8 @@ def upload_face():
     if file.filename == '':
         return jsonify({"error": "No file selected"}), 400
         
-    s3_key = f"known_faces/{name}_front.jpg"
+    # Append timestamp to allow multiple angles of the same person
+    s3_key = f"known_faces/{name}_{int(time.time())}.jpg"
     try:
         s3.put_object(Bucket=BUCKET, Key=s3_key, Body=file.read(), ContentType=file.content_type)
         
